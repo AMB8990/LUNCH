@@ -1,0 +1,29 @@
+FROM python:3.10-slim
+
+WORKDIR /lunch_backend
+
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils \
+    build-essential curl && rm -rf /var/lib/apt/lists/*
+
+RUN python -m venv /lunch_backend/.venv
+ENV VIRTUAL_ENV=/lunch_backend/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH" 
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+ARG TOKEN
+ENV TOKEN=$TOKEN
+
+COPY app /lunch_backend/app
+COPY logging.conf /lunch_backend/logging.conf
+
+COPY init.sh /lunch_backend/init.sh
+RUN chmod +x /lunch_backend/init.sh
+
+EXPOSE 5222
+
+#GO
+ENTRYPOINT ["/bin/bash", "init.sh"]
+
+

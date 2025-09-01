@@ -1,0 +1,4 @@
+
+echo "Amber is hungry now..."
+
+uvicorn app.main:app --host 0.0.0.0 --port 5222 --log-config logging.conf
