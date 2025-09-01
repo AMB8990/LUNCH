@@ -1,0 +1,13 @@
+services:
+  lunch_backend:
+    image: lunch_backend:latest
+    container_name: lunch_backend
+    env_file:
+      - .env
+    ports:
+      - "5222:5222"          
+    volumes:
+      - ./logs:/lunch_backend/logs
+
+    # networks:s
+    #   - amber-network

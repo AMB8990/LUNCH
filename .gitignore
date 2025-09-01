@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 .venv
+.venvfrontend
 .env
 bom_env/
 .testdata/

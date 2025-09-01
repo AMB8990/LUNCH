@@ -1,0 +1,44 @@
+FROM node:23-bookworm AS base
+
+# 1. Install dependencies
+WORKDIR /app/client_app
+
+COPY /client_app/package.json /client_app/package-lock.json* ./
+COPY /client_app/app ./app
+COPY /client_app/jsconfig.json /client_app/next.config.mjs /client_app/tailwind.config.mjs /client_app/postcss.config.mjs /client_app/eslint.config.mjs ./ 
+COPY /client_app/.env.local ./.env
+RUN \
+  if [ -f package-lock.json ]; then npm ci; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+RUN npm run build
+
+
+FROM python:3.10 as builder
+RUN python -m venv /opt/venv
+# Make sure we use the virtualenv:
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+
+FROM python:3.10-slim as runtime-image
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /lunch_frontend
+
+COPY app /lunch_frontend/app
+COPY boot.sh config.py app.py .
+
+COPY --from=base client_app/out/_next/static ./lunch_frontend/client_app/out/_next/static
+COPY --from=base client_app/out ./lunch_frontend/client_app/out
+
+RUN chmod +x boot.sh
+RUN chown -R lunch_frontend:lunch_frontend .
+
+EXPOSE 5221
+ENTRYPOINT ["./boot.sh"]
